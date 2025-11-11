@@ -51,6 +51,20 @@ const orderArb = fc.record({
 // fc.optional(...) - to represent optional fields
 // ------------------------------------------------------------------------------
 
+const profileArb = fc.record({
+  tier: tierArb
+});
+
+const deliveryArb = fc.record({
+  zone: zoneArb,
+  rush: fc.boolean()
+});
+
+const contextArb = fc.record({
+  profile: profileArb,
+  delivery: deliveryArb,
+  coupon: fc.option(fc.constantFrom('PIEROGI-BOGO', 'FIRST10'), { nil: null })
+});
 
 describe('Property-Based Tests for Orders', () => {
   describe('Invariants', () => {
@@ -82,5 +96,14 @@ describe('Property-Based Tests for Orders', () => {
     //   );
     // });
 
+    it('total should always be non-negative integer', () => {
+      fc.assert(
+        fc.property(orderArb, contextArb, (order, context) => {
+          const result = total(order, context);
+          return result >= 0 && Number.isInteger(result);
+        }),
+        { numRuns: 50 }
+      );
+    });
   });
 });
